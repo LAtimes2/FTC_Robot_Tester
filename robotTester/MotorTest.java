@@ -138,7 +138,6 @@ public class MotorTest {
       Boolean done = false;
 
 motorList = Config.getMotors (opMode);
-motorList = Config.getMotorControllers (opMode);
 
       if (motorList.length == 0)
       {
@@ -160,8 +159,7 @@ motorList = Config.getMotorControllers (opMode);
                break;
             case Dpad_Right:
                try {
-////                  motor = opMode.hardwareMap.dcMotor.get(motorList[selectedMotorIndex]);
-         opMode.hardwareMap.dcMotorController.get(motorList[selectedMotorIndex]).setMotorPower(0, 0.2);
+                  motor = opMode.hardwareMap.dcMotor.get(motorList[selectedMotorIndex]);
                   done = true;
                } catch(Exception e) {
                   motor = null;
