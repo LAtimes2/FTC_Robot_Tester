@@ -1,19 +1,13 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import java.util.List;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import java.lang.reflect.Type;
-import com.qualcomm.robotcore.hardware.Gamepad;
 
 
 public class CRServoTest {
-
-   String[] servoList = new String[]{
-      "claw",
-   };
 
    String[] testList = new String[]{
       "Joystick control",
@@ -31,17 +25,17 @@ public class CRServoTest {
 
    public void performServoTest (LinearOpMode opMode)
    {
-      GamepadButtons.ButtonType button;
       Boolean done = false;
-      int selection = 0;
 
       this.opMode = opMode;
       
+      selectedIndex = 0;
+      
       while (!done && opMode.opModeIsActive())
       {
-         selection = Menu.selectFromMenu (testList, selection, opMode);
+         selectedIndex = Menu.selectFromMenu (testList, selectedIndex, opMode);
 
-         switch (selection)
+         switch (selectedIndex)
          {
             case -1:
                done = true;
@@ -95,57 +89,25 @@ public class CRServoTest {
    private CRServo selectServo ()
    {
       CRServo servo = null;
-      GamepadButtons.ButtonType button;
       Boolean done = false;
+      int localServoIndex = selectedServoIndex;
 
-servoList = Config.getCRServos (opMode);
-
-      if (servoList.length == 0)
-      {
-         done = true;
-      }
+      List<DeviceData> servoList = Config.getCRServos (opMode);
 
       while (!done && opMode.opModeIsActive())
       {
-         Menu.drawMenu (servoList, selectedServoIndex);
-         
-         /*
-         if (servoList.length == 1)
+         localServoIndex = Menu.selectFromMenu (servoList, localServoIndex, opMode);
+
+         switch (localServoIndex)
          {
-            // if only one item, automatically select it
-            button = GamepadButtons.ButtonType.Dpad_Right;
-            done = true;
-         }
-         else
-         */
-         {
-            button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
-         }
-         
-         switch (button)
-         {
-            case Dpad_Up:
-               selectedServoIndex = Math.max(selectedServoIndex - 1, 0);
-               break;
-            case Dpad_Down:
-               selectedServoIndex = Math.min(selectedServoIndex + 1, servoList.length - 1);
-               break;
-            case Dpad_Right:
-               try {
-                  servo = opMode.hardwareMap.crservo.get(servoList[selectedServoIndex]);
-                  done = true;
-               } catch(Exception e) {
-                  servo = null;
-                  opMode.telemetry.addData("Error", "No servo " + servoList[selectedServoIndex] + " found in hardwareMap");
-                  opMode.telemetry.update();
-                  opMode.sleep(5000);
-               }
-               break;
-            case Dpad_Left:
+            case -1:
                servo = null;
                done = true;
                break;
             default:
+               servo = (CRServo)servoList.get(localServoIndex).device;
+               selectedServoIndex = localServoIndex;
+               done = true;
                break;
          }
       }

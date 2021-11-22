@@ -10,10 +10,6 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 public class ServoTest {
 
-   String[] servoList = new String[]{
-      "claw",
-   };
-
    String[] testList = new String[]{
       "Joystick control",
       "0/1 control",
@@ -30,39 +26,26 @@ public class ServoTest {
 
    public void performServoTest (LinearOpMode opMode)
    {
-      GamepadButtons.ButtonType button;
       Boolean done = false;
 
       this.opMode = opMode;
       
+      selectedIndex = 0;
+      
       while (!done && opMode.opModeIsActive())
       {
-         Menu.drawMenu (testList, selectedIndex);
-         button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
-         
-         switch (button)
+         selectedIndex = Menu.selectFromMenu (testList, selectedIndex, opMode);
+
+         switch (selectedIndex)
          {
-            case Dpad_Up:
-               selectedIndex = Math.max(selectedIndex - 1, 0);
-               break;
-            case Dpad_Down:
-               selectedIndex = Math.min(selectedIndex + 1, testList.length - 1);
-               break;
-            case Dpad_Right:
-               switch (selectedIndex)
-               {
-                  case 0:
-                     performJoystickTest ();
-                     break;
-                  case 1:
-                     performDiscreteTest ();
-                     break;
-               }
-               break;
-            case Dpad_Left:
+            case -1:
                done = true;
                break;
-            default:
+            case 0:
+               performJoystickTest ();
+               break;
+            case 1:
+               performDiscreteTest ();
                break;
          }
       }
@@ -88,12 +71,12 @@ public class ServoTest {
             while (!testDone && opMode.opModeIsActive())
             {
                // stick goes -1 to 1, servo goes 0 to 1
-               servo.setPosition ((opMode.gamepad1.left_stick_y + 1.0) / 2.0);
+               servo.setPosition ((opMode.gamepad1.right_stick_y + 1.0) / 2.0);
                
-               joystickList[0] = "Joystick y: " + opMode.gamepad1.left_stick_y;
+               joystickList[0] = "Joystick y: " + opMode.gamepad1.right_stick_y;
                joystickList[1] = "Value: " + servo.getPosition();
                Menu.drawMenu (joystickList, 0);
-               button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
+               button = GamepadButtons.getButton (opMode.gamepad1);
             
                switch (button)
                {
@@ -169,57 +152,25 @@ public class ServoTest {
    private Servo selectServo ()
    {
       Servo servo = null;
-      GamepadButtons.ButtonType button;
       Boolean done = false;
+      int localServoIndex = selectedServoIndex;
 
-servoList = Config.getServos (opMode);
-
-      if (servoList.length == 0)
-      {
-         done = true;
-      }
+      List<DeviceData> servoList = Config.getServos (opMode);
 
       while (!done && opMode.opModeIsActive())
       {
-         Menu.drawMenu (servoList, selectedServoIndex);
-         
-         /*
-         if (servoList.length == 1)
+         localServoIndex = Menu.selectFromMenu (servoList, localServoIndex, opMode);
+
+         switch (localServoIndex)
          {
-            // if only one item, automatically select it
-            button = GamepadButtons.ButtonType.Dpad_Right;
-            done = true;
-         }
-         else
-         */
-         {
-            button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
-         }
-         
-         switch (button)
-         {
-            case Dpad_Up:
-               selectedServoIndex = Math.max(selectedServoIndex - 1, 0);
-               break;
-            case Dpad_Down:
-               selectedServoIndex = Math.min(selectedServoIndex + 1, servoList.length - 1);
-               break;
-            case Dpad_Right:
-               try {
-                  servo = opMode.hardwareMap.servo.get(servoList[selectedServoIndex]);
-                  done = true;
-               } catch(Exception e) {
-                  servo = null;
-                  opMode.telemetry.addData("Error", "No servo " + servoList[selectedServoIndex] + " found in hardwareMap");
-                  opMode.telemetry.update();
-                  opMode.sleep(5000);
-               }
-               break;
-            case Dpad_Left:
+            case -1:
                servo = null;
                done = true;
                break;
             default:
+               servo = (Servo)servoList.get(localServoIndex).device;
+               selectedServoIndex = localServoIndex;
+               done = true;
                break;
          }
       }

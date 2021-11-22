@@ -63,4 +63,18 @@ public class Menu {
       
       return currentIndex;
    }
+
+   public static int selectFromMenu (List<DeviceData> menuList, int selectedIndex, LinearOpMode opMode)
+   {
+      int index = 0;
+      String[] menuStrings = new String[menuList.size()];
+      
+      // get list of menu items from DeviceData list
+      for (DeviceData device : menuList) {
+         menuStrings[index] = device.name;
+         ++index;
+      }
+
+      return selectFromMenu (menuStrings, selectedIndex, opMode);
+   }
 }

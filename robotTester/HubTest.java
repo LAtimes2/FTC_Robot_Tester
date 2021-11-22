@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.RobotCoreLynxModule;
+import com.qualcomm.robotcore.robot.Robot;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.util.Hardware;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -35,6 +38,7 @@ public class HubTest {
       
       while (!done && opMode.opModeIsActive())
       {
+///printHubInfo();
          Menu.drawMenu (testList, selectedIndex);
          button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
          
@@ -73,11 +77,15 @@ public class HubTest {
 
       for (Iterator<HardwareDevice> iter = opMode.hardwareMap.iterator(); iter.hasNext(); ) {
         HardwareDevice element = iter.next();
-if (element instanceof DcMotor)
+if (element instanceof DcMotorController)
 {
-        opMode.telemetry.addData("item", element.getDeviceName());
+        opMode.telemetry.addData("itemM", element.getDeviceName());
 }
-//        opMode.telemetry.addData("item", element.getUserConfiguredName());
+if (element instanceof RobotCoreLynxModule)
+{
+////        opMode.telemetry.addData("itemL", ((RobotCoreLynxModule)element).getSerialNumber());
+}
+        opMode.telemetry.addData("item", element.getDeviceName());
       }
 
 //      opMode.telemetry.addData("conn", opMode.hardwareMap.get("Expansion Hub Portal 1").getConnectionInfo());

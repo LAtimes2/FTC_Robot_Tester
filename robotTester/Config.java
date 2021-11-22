@@ -1,122 +1,220 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ServoController;
+import com.qualcomm.robotcore.util.Device;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoImpl;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.CRServoImpl;
 import com.qualcomm.robotcore.hardware.DcMotorController;
-//import com.qualcomm.robotcore.hardware.HardwareDevice;
-//import com.qualcomm.robotcore.util.Hardware;
+import com.qualcomm.robotcore.hardware.DcMotorImpl;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-//import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
-//import com.qualcomm.robotcore.hardware.Servo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import com.qualcomm.robotcore.hardware.DcMotor;
-//import java.lang.reflect.Type;
-//import com.qualcomm.robotcore.hardware.Gamepad;
 
 
 public class Config {
 
-  public static String[] getCRServos (LinearOpMode opMode)
+  public static List<DeviceData> getMotors (LinearOpMode opMode)
   {
-    List<CRServo> servoList;
-    List<String> servoNames = new ArrayList<String>();
-    
-    // get list of servos
-    servoList = opMode.hardwareMap.getAll(CRServo.class);
-
-    // get names
-    for (CRServo servo : servoList) {
-      // may have multiple names
-      Set<String> names = opMode.hardwareMap.getNamesOf(servo);
-
-      // name = first in set
-      String name = names.iterator().next();
-      
-      servoNames.add(name);
-    }
-
-    String[] namesArray = new String[servoNames.size()];
-    servoNames.toArray (namesArray);
-
-    return namesArray;
-  }
-
-  public static String[] getServos (LinearOpMode opMode)
-  {
-    List<Servo> servoList;
-    List<String> servoNames = new ArrayList<String>();
-    
-    // get list of servos
-    servoList = opMode.hardwareMap.getAll(Servo.class);
-
-    // get names
-    for (Servo servo : servoList) {
-      // may have multiple names
-      Set<String> names = opMode.hardwareMap.getNamesOf(servo);
-
-      // name = first in set
-      String name = names.iterator().next();
-      
-      servoNames.add(name);
-    }
-
-    String[] namesArray = new String[servoNames.size()];
-    servoNames.toArray (namesArray);
-
-    return namesArray;
-  }
-
-  public static String[] getMotors (LinearOpMode opMode)
-  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
     List<DcMotor> motorList;
-    List<String> motorNames = new ArrayList<String>();
-    
+    List<DeviceData> controllerList;
+
+    controllerList = getMotorControllers (opMode);
+
+    if (controllerList.size() == 0) {
+       return null;
+    }
+
+    for (DeviceData deviceData : controllerList) {
+      
+      DcMotorController controller = (DcMotorController)deviceData.device;
+      String controllerName = "";
+
+      if (controllerList.size() > 1) {
+         controllerName = deviceData.name;
+      }
+
+      // set up default motors in case not in Configuration
+      deviceList.add(new DeviceData(controllerName + " Port 0",
+                                    new DcMotorImpl(controller, 0) ));
+      deviceList.add(new DeviceData(controllerName + " Port 1",
+                                    new DcMotorImpl(controller, 1) ));
+      deviceList.add(new DeviceData(controllerName + " Port 2",
+                                    new DcMotorImpl(controller, 2) ));
+      deviceList.add(new DeviceData(controllerName + " Port 3",
+                                    new DcMotorImpl(controller, 3) ));
+
     // get list of motors
     motorList = opMode.hardwareMap.getAll(DcMotor.class);
 
-    // get names
     for (DcMotor motor : motorList) {
-      // may have multiple names
-      Set<String> names = opMode.hardwareMap.getNamesOf(motor);
-
-      // name = first in set
-      String name = names.iterator().next();
       
-      motorNames.add(name);
+      // if motor is on this controller
+      if (motor.getController() == controller)
+      {
+        // name = first in set
+        String name = opMode.hardwareMap.getNamesOf(motor).iterator().next();
+
+        int port = motor.getPortNumber();
+        
+        deviceList.get(port).name = deviceList.get(port).name + " (" + name + ")";
+        deviceList.get(port).device = motor;
+      }
+    }
     }
 
-    String[] namesArray = new String[motorNames.size()];
-    motorNames.toArray (namesArray);
-
-    return namesArray;
+    return deviceList;
   }
 
-  public static String[] getMotorControllers (LinearOpMode opMode)
+  public static List<DeviceData> getMotorControllers (LinearOpMode opMode)
   {
-    List<DcMotorController> motorList;
-    List<String> motorNames = new ArrayList<String>();
-    
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<DcMotorController> controllerList;
+
     // get list of motor controllers
-    motorList = opMode.hardwareMap.getAll(DcMotorController.class);
+    controllerList = opMode.hardwareMap.getAll(DcMotorController.class);
 
-    // get names
-    for (DcMotorController motor : motorList) {
-      // may have multiple names
-      Set<String> names = opMode.hardwareMap.getNamesOf(motor);
-
-      // name = first in set
-      String name = names.iterator().next();
-      
-      motorNames.add(name);
+    for (DcMotorController controller : controllerList) {
+      deviceList.add(new DeviceData (opMode.hardwareMap.getNamesOf(controller).iterator().next(),
+                                     controller));
     }
 
-    String[] namesArray = new String[motorNames.size()];
-    motorNames.toArray (namesArray);
+    return deviceList;
+  }
 
-    return namesArray;
+  public static List<DeviceData> getCRServos (LinearOpMode opMode)
+  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<CRServo> servoList;
+    List<DeviceData> controllerList;
+
+    controllerList = getServoControllers (opMode);
+
+    if (controllerList.size() == 0) {
+       return null;
+    }
+
+    for (DeviceData deviceData : controllerList) {
+      
+      ServoController controller = (ServoController)deviceData.device;
+      String controllerName = "";
+
+      if (controllerList.size() > 1) {
+         controllerName = deviceData.name;
+      }
+
+      // set up default servos in case not in Configuration
+      deviceList.add(new DeviceData(controllerName + " CR Servo 0",
+                                    new CRServoImpl(controller, 0) ));
+      deviceList.add(new DeviceData(controllerName + " CR Servo 1",
+                                    new CRServoImpl(controller, 1) ));
+      deviceList.add(new DeviceData(controllerName + " CR Servo 2",
+                                    new CRServoImpl(controller, 2) ));
+      deviceList.add(new DeviceData(controllerName + " CR Servo 3",
+                                    new CRServoImpl(controller, 3) ));
+      deviceList.add(new DeviceData(controllerName + " CR Servo 4",
+                                    new CRServoImpl(controller, 4) ));
+      deviceList.add(new DeviceData(controllerName + " CR Servo 5",
+                                    new CRServoImpl(controller, 5) ));
+
+      // get list of servos
+      servoList = opMode.hardwareMap.getAll(CRServo.class);
+
+      for (CRServo servo : servoList) {
+      
+        // if servo is on this controller
+        if (servo.getController() == controller)
+        {
+          // name = first in set
+          String name = opMode.hardwareMap.getNamesOf(servo).iterator().next();
+
+          int port = servo.getPortNumber();
+        
+          deviceList.get(port).name = deviceList.get(port).name + " (" + name + ")";
+          deviceList.get(port).device = servo;
+        }
+      }
+    }
+
+    return deviceList;
+  }
+
+  public static List<DeviceData> getServos (LinearOpMode opMode)
+  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<Servo> servoList;
+    List<DeviceData> controllerList;
+
+    controllerList = getServoControllers (opMode);
+
+    if (controllerList.size() == 0) {
+       return null;
+    }
+
+    for (DeviceData deviceData : controllerList) {
+      
+      ServoController controller = (ServoController)deviceData.device;
+      String controllerName = "";
+
+      if (controllerList.size() > 1) {
+         controllerName = deviceData.name;
+      }
+
+      // set up default servos in case not in Configuration
+      deviceList.add(new DeviceData(controllerName + " Servo 0",
+                                    new ServoImpl(controller, 0) ));
+      deviceList.add(new DeviceData(controllerName + " Servo 1",
+                                    new ServoImpl(controller, 1) ));
+      deviceList.add(new DeviceData(controllerName + " Servo 2",
+                                    new ServoImpl(controller, 2) ));
+      deviceList.add(new DeviceData(controllerName + " Servo 3",
+                                    new ServoImpl(controller, 3) ));
+      deviceList.add(new DeviceData(controllerName + " Servo 4",
+                                    new ServoImpl(controller, 4) ));
+      deviceList.add(new DeviceData(controllerName + " Servo 5",
+                                    new ServoImpl(controller, 5) ));
+
+      // get list of servos
+      servoList = opMode.hardwareMap.getAll(Servo.class);
+
+      for (Servo servo : servoList) {
+      
+        // if servo is on this controller
+        if (servo.getController() == controller)
+        {
+          // name = first in set
+          String name = opMode.hardwareMap.getNamesOf(servo).iterator().next();
+
+          int port = servo.getPortNumber();
+        
+          deviceList.get(port).name = deviceList.get(port).name + " (" + name + ")";
+          deviceList.get(port).device = servo;
+        }
+      }
+    }
+
+    return deviceList;
+  }
+
+  public static List<DeviceData> getServoControllers (LinearOpMode opMode)
+  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<ServoController> controllerList;
+
+    // get list of servo controllers
+    controllerList = opMode.hardwareMap.getAll(ServoController.class);
+
+    for (ServoController controller : controllerList) {
+      deviceList.add(new DeviceData (opMode.hardwareMap.getNamesOf(controller).iterator().next(),
+                                     controller));
+    }
+
+    return deviceList;
   }
 
 }
