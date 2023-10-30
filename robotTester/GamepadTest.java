@@ -2,9 +2,7 @@ package org.firstinspires.ftc.teamcode.robotTester;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
-import com.qualcomm.robotcore.util.Hardware;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.Servo;
 import java.util.List;
 import com.qualcomm.robotcore.hardware.DcMotor;

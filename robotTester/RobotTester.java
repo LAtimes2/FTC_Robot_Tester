@@ -42,6 +42,8 @@ public class RobotTester extends LinearOpMode {
       
       while (!done && opMode.opModeIsActive())
       {
+         telemetry.addData ("   Use Dpad to select items", "");
+         telemetry.addData ("", "");
          Menu.drawMenu (testList, selectedIndex);
          button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
          
