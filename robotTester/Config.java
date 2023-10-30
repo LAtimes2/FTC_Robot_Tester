@@ -23,6 +23,7 @@ public class Config {
     List<DeviceData> deviceList = new ArrayList<DeviceData>();
     List<DcMotor> motorList;
     List<DeviceData> controllerList;
+    int controllerIndex = 0;
 
     controllerList = getMotorControllers (opMode);
 
@@ -49,23 +50,26 @@ public class Config {
       deviceList.add(new DeviceData(controllerName + " Port 3",
                                     new DcMotorImpl(controller, 3) ));
 
-    // get list of motors
-    motorList = opMode.hardwareMap.getAll(DcMotor.class);
+      // get list of motors
+      motorList = opMode.hardwareMap.getAll(DcMotor.class);
 
-    for (DcMotor motor : motorList) {
+      for (DcMotor motor : motorList) {
       
-      // if motor is on this controller
-      if (motor.getController() == controller)
-      {
-        // name = first in set
-        String name = opMode.hardwareMap.getNamesOf(motor).iterator().next();
+        // if motor is on this controller
+        if (motor.getController() == controller)
+        {
+          // name = first in set
+          String name = opMode.hardwareMap.getNamesOf(motor).iterator().next();
 
-        int port = motor.getPortNumber();
+          // index into deviceList is 4 (ports) for each previous controller + port number on current controller
+          int index = controllerIndex * 4 + motor.getPortNumber();
         
-        deviceList.get(port).name = deviceList.get(port).name + " (" + name + ")";
-        deviceList.get(port).device = motor;
+          deviceList.get(index).name = deviceList.get(index).name + " (" + name + ")";
+          deviceList.get(index).device = motor;
+        }
       }
-    }
+      
+      controllerIndex++;
     }
 
     return deviceList;
@@ -92,6 +96,7 @@ public class Config {
     List<DeviceData> deviceList = new ArrayList<DeviceData>();
     List<CRServo> servoList;
     List<DeviceData> controllerList;
+    int controllerIndex = 0;
 
     controllerList = getServoControllers (opMode);
 
@@ -133,12 +138,15 @@ public class Config {
           // name = first in set
           String name = opMode.hardwareMap.getNamesOf(servo).iterator().next();
 
-          int port = servo.getPortNumber();
+          // index into deviceList is 6 (ports) for each previous controller + port number on current controller
+          int index = controllerIndex * 6 + servo.getPortNumber();
         
-          deviceList.get(port).name = deviceList.get(port).name + " (" + name + ")";
-          deviceList.get(port).device = servo;
+          deviceList.get(index).name = deviceList.get(index).name + " (" + name + ")";
+          deviceList.get(index).device = servo;
         }
       }
+      
+      controllerIndex++;
     }
 
     return deviceList;
@@ -149,6 +157,7 @@ public class Config {
     List<DeviceData> deviceList = new ArrayList<DeviceData>();
     List<Servo> servoList;
     List<DeviceData> controllerList;
+    int controllerIndex = 0;
 
     controllerList = getServoControllers (opMode);
 
@@ -190,12 +199,15 @@ public class Config {
           // name = first in set
           String name = opMode.hardwareMap.getNamesOf(servo).iterator().next();
 
-          int port = servo.getPortNumber();
+          // index into deviceList is 6 (ports) for each previous controller + port number on current controller
+          int index = controllerIndex * 6 + servo.getPortNumber();
         
-          deviceList.get(port).name = deviceList.get(port).name + " (" + name + ")";
-          deviceList.get(port).device = servo;
+          deviceList.get(index).name = deviceList.get(index).name + " (" + name + ")";
+          deviceList.get(index).device = servo;
         }
       }
+      
+      controllerIndex++;
     }
 
     return deviceList;
