@@ -101,19 +101,47 @@ public class MotorTest {
 
    private void performEncoderTest ()
    {
-      DcMotor motor = selectMotor ();
-      
-      if (motor == null)
-      {
-         return;
-      }
-      
-//      while (motor != null && opMode.opModeIsActive ())
-//      {
-//         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+      GamepadButtons.ButtonType button;
+      Boolean done = false;
 
-//         motor.setPower(0.5);
-//      }
+      while (!done && opMode.opModeIsActive())
+      {
+         DcMotor motor = selectMotor ();
+      
+         if (motor == null)
+         {
+            done = true;
+         }
+         else
+         {
+            Boolean testDone = false;
+
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motor.setPower(0.05);
+            opMode.sleep(50);
+            motor.setPower(0.0);
+
+            while (!testDone && opMode.opModeIsActive())
+            {
+               joystickList[0] = "Encoder: " + motor.getCurrentPosition();
+               joystickList[1] = "";
+               joystickList[2] = "";
+               Menu.drawMenu (joystickList, 0);
+               button = GamepadButtons.getButton (opMode.gamepad1);
+            
+               switch (button)
+               {
+                  case Dpad_Left:
+                     testDone = true;
+                     break;
+                  default:
+                     break;
+               }
+            }
+         }
+         
+      }
    }
 
    private DcMotor selectMotor ()
