@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import java.util.List;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.NaiveAccelerationIntegrator;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import java.util.List;
+import com.qualcomm.robotcore.hardware.IMU;
 
 
 public class ImuTest {
@@ -20,6 +22,7 @@ public class ImuTest {
    int selectedIndex = 0;
    
    BNO055IMU imu;
+   IMU commonImu;
 
    public void performTest (LinearOpMode opMode)
    {
@@ -27,17 +30,23 @@ public class ImuTest {
       Boolean done = false;
       int selection = 0;
 
-      BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-      parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-      parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-      parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-      parameters.mode                = BNO055IMU.SensorMode.NDOF;
+      /* The next two lines define Hub orientation.
+      * The Default Orientation (shown) is when a hub is mounted horizontally with the printed logo pointing UP and the USB port pointing FORWARD.
+      *
+      * To Do:  EDIT these two lines to match YOUR mounting configuration.
+      */
+      RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+      RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+      RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
 
       this.opMode = opMode;
       
       try {
-         imu = opMode.hardwareMap.get(BNO055IMU.class, "imu");
-         imu.initialize (parameters);
+         // Now initialize the IMU with this mounting orientation
+         // This sample expects the IMU to be in a REV Hub and named "imu".
+         commonImu = opMode.hardwareMap.get(IMU.class, "imu");
+         commonImu.initialize(new IMU.Parameters(orientationOnRobot));
       } catch(Exception e) {
          done = true;
       }
@@ -75,11 +84,13 @@ public class ImuTest {
 
       while (!testDone && opMode.opModeIsActive())
       {
+         YawPitchRollAngles orientation = commonImu.getRobotYawPitchRollAngles();
+
          textList[0] = "Angles";
          textList[1] = "";
-         textList[2] = "Heading: " + imu.getAngularOrientation().firstAngle;
-         textList[3] = "Pitch: " + imu.getAngularOrientation().secondAngle;
-         textList[4] = "Roll:  " + imu.getAngularOrientation().thirdAngle;
+         textList[2] = "Heading: " + orientation.getYaw(AngleUnit.DEGREES);
+         textList[3] = "Pitch: " + orientation.getPitch(AngleUnit.DEGREES);
+         textList[4] = "Roll:  " + orientation.getRoll(AngleUnit.DEGREES);
 
          // -100 prevents menu selection cursor
          Menu.drawMenu (textList, -100);

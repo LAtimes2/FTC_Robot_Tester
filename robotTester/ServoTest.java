@@ -53,8 +53,11 @@ public class ServoTest {
 
    private void performJoystickTest ()
    {
+      // Joystick at 0 keeps servo constant. Up moves servo one way, down the other
+
       GamepadButtons.ButtonType button;
       Boolean done = false;
+      float joystickValue;
 
       while (!done && opMode.opModeIsActive())
       {
@@ -67,11 +70,30 @@ public class ServoTest {
          else
          {
             Boolean testDone = false;
+            Double currentPosition = servo.getPosition();
 
             while (!testDone && opMode.opModeIsActive())
             {
                // stick goes -1 to 1, servo goes 0 to 1
-               servo.setPosition ((opMode.gamepad1.right_stick_y + 1.0) / 2.0);
+               joystickValue = opMode.gamepad1.right_stick_y;
+               
+               // make joystick more sensitive at lower values
+               if (joystickValue > 0)
+               {
+                  joystickValue = joystickValue * joystickValue;
+               }
+               else
+               {
+                  // negative value
+                  joystickValue = -joystickValue * joystickValue;
+               }
+
+               currentPosition += joystickValue * 0.005;
+
+               if (currentPosition > 1.0) currentPosition = 1.0;
+               if (currentPosition < 0.0) currentPosition = 0.0;
+
+               servo.setPosition (currentPosition);
                
                joystickList[0] = "Joystick y: " + opMode.gamepad1.right_stick_y;
                joystickList[1] = "Value: " + servo.getPosition();
@@ -86,6 +108,8 @@ public class ServoTest {
                   default:
                      break;
                }
+
+               opMode.sleep (20);
             }
          }
       }

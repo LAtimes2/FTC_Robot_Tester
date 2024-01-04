@@ -48,6 +48,14 @@ public class GamepadTest {
                opMode.telemetry.addData(button.toString(), opMode.gamepad1.right_stick_y);
                opMode.telemetry.update();
                break;
+            case Left_Trigger:
+               opMode.telemetry.addData(button.toString(), opMode.gamepad1.left_trigger);
+               opMode.telemetry.update();
+               break;
+            case Right_Trigger:
+               opMode.telemetry.addData(button.toString(), opMode.gamepad1.right_trigger);
+               opMode.telemetry.update();
+               break;
             default:
                opMode.telemetry.addData(button.toString(), "");
                opMode.telemetry.update();
