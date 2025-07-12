@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
 import java.util.List;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 
@@ -30,7 +29,7 @@ public class Menu {
       telemetry.update ();
    }
    
-   public static int selectFromMenu (String[] menuList, int selectedIndex, LinearOpMode opMode)
+   public static int selectFromMenu (String[] menuList, int selectedIndex, RobotTester opMode)
    {
       GamepadButtons.ButtonType button;
       int currentIndex = selectedIndex;
@@ -39,20 +38,24 @@ public class Menu {
       while (!done && opMode.opModeIsActive())
       {
          Menu.drawMenu (menuList, currentIndex);
-         button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
+         button = opMode.gamepadButtons1.waitForButton ();
          
          switch (button)
          {
             case Dpad_Up:
+            case Y:
                currentIndex = Math.max(currentIndex - 1, 0);
                break;
             case Dpad_Down:
+            case A:
                currentIndex = Math.min(currentIndex + 1, menuList.length - 1);
                break;
             case Dpad_Right:
+            case B:
                done = true;
                break;
             case Dpad_Left:
+            case X:
                currentIndex = -1;
                done = true;
                break;
@@ -64,7 +67,7 @@ public class Menu {
       return currentIndex;
    }
 
-   public static int selectFromMenu (List<DeviceData> menuList, int selectedIndex, LinearOpMode opMode)
+   public static int selectFromMenu (List<DeviceData> menuList, int selectedIndex, RobotTester opMode)
    {
       int index = 0;
       String[] menuStrings = new String[menuList.size()];

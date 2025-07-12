@@ -11,7 +11,6 @@ public class CRServoTest {
 
    String[] testList = new String[]{
       "Joystick control",
-      "0/1 control",
    };
 
    String[] joystickList = new String[]{
@@ -19,11 +18,11 @@ public class CRServoTest {
       "Value",
    };
 
-   LinearOpMode opMode = null;
+   RobotTester opMode = null;
    int selectedIndex = 0;
    int selectedServoIndex = 0;
 
-   public void performServoTest (LinearOpMode opMode)
+   public void performServoTest (RobotTester opMode)
    {
       Boolean done = false;
 
@@ -71,11 +70,12 @@ public class CRServoTest {
                joystickList[0] = "Joystick y: " + opMode.gamepad1.right_stick_y;
                joystickList[1] = "Power: " + servo.getPower();
                Menu.drawMenu (joystickList, 0);
-               button = GamepadButtons.getButton (opMode.gamepad1);
+               button = opMode.gamepadButtons1.getButton ();
             
                switch (button)
                {
                   case Dpad_Left:
+                  case X:
                      testDone = true;
                      break;
                   default:
@@ -92,7 +92,7 @@ public class CRServoTest {
       Boolean done = false;
       int localServoIndex = selectedServoIndex;
 
-      List<DeviceData> servoList = Config.getCRServos (opMode);
+      List<DeviceData> servoList = RobotConfig.getCRServos (opMode);
 
       while (!done && opMode.opModeIsActive())
       {

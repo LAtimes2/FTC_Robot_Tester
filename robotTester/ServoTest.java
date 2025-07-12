@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import java.util.ArrayList;
+import java.util.HashMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import java.util.List;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,7 +13,8 @@ public class ServoTest {
 
    String[] testList = new String[]{
       "Joystick control",
-      "0/1 control",
+      "",
+      "WARNING: Servo may move when starting test!",
    };
 
    String[] joystickList = new String[]{
@@ -20,11 +22,14 @@ public class ServoTest {
       "Value",
    };
 
-   LinearOpMode opMode = null;
+   RobotTester opMode = null;
    int selectedIndex = 0;
    int selectedServoIndex = 0;
 
-   public void performServoTest (LinearOpMode opMode)
+   // list of servos that have been initialized
+   List<String> servoInitList = new ArrayList<>();
+
+   public void performServoTest (RobotTester opMode)
    {
       Boolean done = false;
 
@@ -44,16 +49,14 @@ public class ServoTest {
             case 0:
                performJoystickTest ();
                break;
-            case 1:
-               performDiscreteTest ();
-               break;
          }
       }
    }
 
    private void performJoystickTest ()
    {
-      // Joystick at 0 keeps servo constant. Up moves servo one way, down the other
+      // Joystick at 0 (center) keeps servo at same position.
+      // Up moves servo one way, down the other
 
       GamepadButtons.ButtonType button;
       Boolean done = false;
@@ -69,14 +72,16 @@ public class ServoTest {
          }
          else
          {
+            // set initial position if not already set
+            initializeServo (servo);
+
             Boolean testDone = false;
             Double currentPosition = servo.getPosition();
 
             while (!testDone && opMode.opModeIsActive())
             {
-               // stick goes -1 to 1, servo goes 0 to 1
                joystickValue = opMode.gamepad1.right_stick_y;
-               
+
                // make joystick more sensitive at lower values
                if (joystickValue > 0)
                {
@@ -98,11 +103,12 @@ public class ServoTest {
                joystickList[0] = "Joystick y: " + opMode.gamepad1.right_stick_y;
                joystickList[1] = "Value: " + servo.getPosition();
                Menu.drawMenu (joystickList, 0);
-               button = GamepadButtons.getButton (opMode.gamepad1);
+               button = opMode.gamepadButtons1.getButton ();
             
                switch (button)
                {
                   case Dpad_Left:
+                  case X:
                      testDone = true;
                      break;
                   default:
@@ -115,61 +121,14 @@ public class ServoTest {
       }
    }
 
-   private void performDiscreteTest ()
+   private void initializeServo (Servo servo)
    {
-      String[] positionList = new String[]{
-         "Set to 0",
-         "Set to 1",
-      };
-
-      GamepadButtons.ButtonType button;
-      Boolean done = false;
-      int selectedPositionIndex = 0;
-
-      while (!done && opMode.opModeIsActive())
+      // if servo has not been initialized, set it to middle value and add to list
+      // of initialized servos
+      if (!servoInitList.contains (servo.getConnectionInfo ()))
       {
-         Servo servo = selectServo ();
-      
-         if (servo == null)
-         {
-            done = true;
-         }
-         else
-         {
-            Boolean testDone = false;
-
-            while (!testDone && opMode.opModeIsActive())
-            {
-               Menu.drawMenu (positionList, selectedPositionIndex);
-               button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
-            
-               switch (button)
-               {
-                  case Dpad_Up:
-                     selectedPositionIndex = Math.max(selectedPositionIndex - 1, 0);
-                     break;
-                  case Dpad_Down:
-                     selectedPositionIndex = Math.min(selectedPositionIndex + 1, positionList.length - 1);
-                     break;
-                  case Dpad_Right:
-                     switch (selectedPositionIndex)
-                     {
-                        case 0:
-                           servo.setPosition (0.0);
-                           break;
-                        case 1:
-                           servo.setPosition (1.0);
-                           break;
-                     }
-                     break;
-                  case Dpad_Left:
-                     testDone = true;
-                     break;
-                  default:
-                     break;
-               }
-            }
-         }
+         servo.setPosition (0.5);
+         servoInitList.add (servo.getConnectionInfo ());
       }
    }
 
@@ -179,7 +138,7 @@ public class ServoTest {
       Boolean done = false;
       int localServoIndex = selectedServoIndex;
 
-      List<DeviceData> servoList = Config.getServos (opMode);
+      List<DeviceData> servoList = RobotConfig.getServos (opMode);
 
       while (!done && opMode.opModeIsActive())
       {

@@ -29,9 +29,11 @@ public class CheckEncoders extends LinearOpMode {
          // name = first in set
          String name = hardwareMap.getNamesOf(motor).iterator().next();
 
-         // test the encode by running the motor slightly
+         // reset encoder to 0 and run using power setting, can still read encoder value
          motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+         // test the encoder by running the motor slightly
          motor.setPower(0.1);
          sleep(50);
          motor.setPower(0.0);
@@ -53,6 +55,32 @@ public class CheckEncoders extends LinearOpMode {
          sleep(50);
          motor.setPower(0.0);
 
+         // if it didn't change
+         if (passed == false)
+         {
+            // use a higher power setting on the second try
+            motor.setPower(0.2);
+            sleep(50);
+            motor.setPower(0.0);
+            sleep(100);
+
+            if (motor.getCurrentPosition() != 0)
+            {
+               passed = true;
+               results = "Passed 2nd try";
+            }
+            else
+            {
+               passed = false;
+               results = "Failed";
+            }
+
+            // set motor back to original position
+            motor.setPower(-0.2);
+            sleep(50);
+            motor.setPower(0.0);
+         }
+
          telemetry.addData (name, results);
       }
 
@@ -61,5 +89,5 @@ public class CheckEncoders extends LinearOpMode {
       // wait a long time (10 minutes)
       sleep (600000);
    }
-
+   
 }

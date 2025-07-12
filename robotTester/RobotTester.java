@@ -1,17 +1,24 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
 public class RobotTester extends LinearOpMode {
 
+   public GamepadButtons gamepadButtons1;
+   public GamepadButtons gamepadButtons2;
+
    @Override
    public void runOpMode() {
+
+      gamepadButtons1 = new GamepadButtons (gamepad1, this);   
+      gamepadButtons2 = new GamepadButtons (gamepad2, this);
       
       Menu.telemetry = telemetry;
+
+      telemetry.addData ("Robot Tester   ", "V1.1    7/11/2025");
+      telemetry.update ();
 
       waitForStart();
       
@@ -25,6 +32,7 @@ public class RobotTester extends LinearOpMode {
          "Motor test",
          "Servo test",
          "CR Servo test",
+         "Touch Sensor test",
          "Gamepad test",
       };
 
@@ -37,25 +45,29 @@ public class RobotTester extends LinearOpMode {
       HubTest hubTest = new HubTest ();
       MotorTest motorTest = new MotorTest ();
       ServoTest servoTest = new ServoTest ();
+      TouchSensorTest touchSensorTest = new TouchSensorTest ();
 
       LinearOpMode opMode = this;
       
       while (!done && opMode.opModeIsActive())
       {
-         telemetry.addData ("   Use Dpad to select items", "");
+         telemetry.addData ("   Use Dpad or A/B/X/Y to select items", "");
          telemetry.addData ("", "");
          Menu.drawMenu (testList, selectedIndex);
-         button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
+         button = gamepadButtons1.waitForButton ();
          
          switch (button)
          {
             case Dpad_Up:
+            case Y:
                selectedIndex = Math.max(selectedIndex - 1, 0);
                break;
             case Dpad_Down:
+            case A:
                selectedIndex = Math.min(selectedIndex + 1, testList.length - 1);
                break;
             case Dpad_Right:
+            case B:
                switch (selectedIndex)
                {
                   case 0:
@@ -71,6 +83,9 @@ public class RobotTester extends LinearOpMode {
                      crservoTest.performServoTest (this);
                      break;
                   case 4:
+                     touchSensorTest.performTouchSensorTest (this);
+                     break;
+                  case 5:
                      gamepadTest.performGamepadTest (this);
                      break;
                }

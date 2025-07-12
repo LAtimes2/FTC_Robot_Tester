@@ -1,64 +1,88 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.HardwareDevice;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
-import java.util.List;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import java.lang.reflect.Type;
 import com.qualcomm.robotcore.hardware.Gamepad;
-
 
 public class GamepadTest {
 
-   LinearOpMode opMode = null;
+   RobotTester opMode = null;
    int selectedIndex = 0;
    int selectedServoIndex = 0;
 
-   public void performGamepadTest (LinearOpMode opMode)
+   public void performGamepadTest (RobotTester opMode)
    {
       GamepadButtons.ButtonType button;
       Boolean done = false;
+      Boolean gamepad2Connected = (opMode.gamepad2.getGamepadId () > 0);
+      String gamepadName = "";
+      String gamepad1Name = "";
+      Gamepad testGamepad;
 
       this.opMode = opMode;
       
+      // if 2 gamepads connected, then need to display the name of each one
+      if (gamepad2Connected)
+      {
+         gamepad1Name = " gamepad1";
+      }
+
+      opMode.telemetry.addData("Press gamepad buttons to test", "Dpad Left to exit");
+      opMode.telemetry.update();
+
       while (!done && opMode.opModeIsActive())
       {
-         button = GamepadButtons.waitForButton (opMode.gamepad1, opMode);
+         testGamepad = opMode.gamepad1;
+         button = opMode.gamepadButtons1.getButton ();
+
+         if (button == GamepadButtons.ButtonType.None)
+         {
+            testGamepad = opMode.gamepad2;
+            button = opMode.gamepadButtons2.getButton ();
+            gamepadName = " gamepad2";
+         }
+         else
+         {
+            gamepadName = gamepad1Name;
+         }
          
          switch (button)
          {
-            case Dpad_Left:
-               done = true;
-               break;
             case Left_Stick_X:
-               opMode.telemetry.addData(button.toString(), opMode.gamepad1.left_stick_x);
-               opMode.telemetry.update();
-               break;
             case Left_Stick_Y:
-               opMode.telemetry.addData(button.toString(), opMode.gamepad1.left_stick_y);
+               opMode.telemetry.addData(button.toString(), "");
+               opMode.telemetry.addData("X", testGamepad.left_stick_x);
+               opMode.telemetry.addData("Y", testGamepad.left_stick_y);
                opMode.telemetry.update();
                break;
             case Right_Stick_X:
-               opMode.telemetry.addData(button.toString(), opMode.gamepad1.right_stick_x);
-               opMode.telemetry.update();
-               break;
             case Right_Stick_Y:
-               opMode.telemetry.addData(button.toString(), opMode.gamepad1.right_stick_y);
+               opMode.telemetry.addData(button.toString() + gamepadName, "");
+               opMode.telemetry.addData("X", testGamepad.right_stick_x);
+               opMode.telemetry.addData("Y", testGamepad.right_stick_y);
                opMode.telemetry.update();
                break;
             case Left_Trigger:
-               opMode.telemetry.addData(button.toString(), opMode.gamepad1.left_trigger);
+               opMode.telemetry.addData(button.toString() + gamepadName, testGamepad.left_trigger);
                opMode.telemetry.update();
                break;
             case Right_Trigger:
-               opMode.telemetry.addData(button.toString(), opMode.gamepad1.right_trigger);
+               opMode.telemetry.addData(button.toString() + gamepadName, testGamepad.right_trigger);
                opMode.telemetry.update();
                break;
             default:
-               opMode.telemetry.addData(button.toString(), "");
-               opMode.telemetry.update();
+               if (button != GamepadButtons.ButtonType.None)
+               {
+                  opMode.telemetry.addData(button.toString() + gamepadName, "");
+                  opMode.telemetry.update();
+
+               // if gamepad 1 Dpad Left, exit after 1 second
+               if (gamepadName == gamepad1Name  && button == GamepadButtons.ButtonType.Dpad_Left)
+               {
+                  opMode.sleep (1000);
+                  done = true;
+                  break;
+               }
+               // don't break, continue into normal button processing below
+               }
                break;
          }
       }

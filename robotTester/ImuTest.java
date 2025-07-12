@@ -1,35 +1,25 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import java.util.List;
 import com.qualcomm.robotcore.hardware.IMU;
+import java.text.DecimalFormat;
+import java.util.List;
 
 
 public class ImuTest {
 
-   String[] testList = new String[]{
-      "Angles",
-      "Distance",
-      "Gravity",
-      "Magnetism",
-   };
-
-   LinearOpMode opMode = null;
+   RobotTester opMode = null;
    int selectedIndex = 0;
    
-   BNO055IMU imu;
    IMU commonImu;
 
-   public void performTest (LinearOpMode opMode)
-   {
-      GamepadButtons.ButtonType button;
-      Boolean done = false;
-      int selection = 0;
+   // print values to 1 decimal place
+   DecimalFormat df = new DecimalFormat ("#.#");
 
+   public void performTest (RobotTester opMode)
+   {
       /* The next two lines define Hub orientation.
       * The Default Orientation (shown) is when a hub is mounted horizontally with the printed logo pointing UP and the USB port pointing FORWARD.
       *
@@ -39,66 +29,66 @@ public class ImuTest {
       RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
       RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
-
       this.opMode = opMode;
       
       try {
-         // Now initialize the IMU with this mounting orientation
+         // Now initialize the Control Hub IMU with this mounting orientation
          // This sample expects the IMU to be in a REV Hub and named "imu".
          commonImu = opMode.hardwareMap.get(IMU.class, "imu");
          commonImu.initialize(new IMU.Parameters(orientationOnRobot));
       } catch(Exception e) {
-         done = true;
       }
 
-      while (!done && opMode.opModeIsActive())
-      {
-         selection = Menu.selectFromMenu (testList, selection, opMode);
-
-         switch (selection)
-         {
-            case -1:
-               done = true;
-               break;
-            case 0:
-               performAnglesTest ();
-               break;
-            case 1:
-               performDistanceTest ();
-               break;
-            case 2:
-               performGravityTest ();
-               break;
-            case 3:
-               performMagnetismTest ();
-               break;
-         }
+      // try to initialize an expansion hub IMU. If there is not an expansion hub,
+      // the catch will just ignore any errors.
+      try {
+         // Now initialize the Expansion Hub IMU with this mounting orientation
+         // This sample expects the IMU to be in a REV Hub and named "imu".
+         commonImu = opMode.hardwareMap.get(IMU.class, "imu2");
+         commonImu.initialize(new IMU.Parameters(orientationOnRobot));
+      } catch(Exception e) {
       }
+
+      performAnglesTest ();
    }
 
    private void performAnglesTest ()
    {
       GamepadButtons.ButtonType button;
       Boolean testDone = false;
-      String[] textList = new String[5];
+      int index = 0;
+
+      List<DeviceData> imuList = RobotConfig.getIMUs (opMode);
+
+      // 6 lines of text per IMU
+      String[] textList = new String[imuList.size () * 6];
 
       while (!testDone && opMode.opModeIsActive())
       {
-         YawPitchRollAngles orientation = commonImu.getRobotYawPitchRollAngles();
+         index = 0;
 
-         textList[0] = "Angles";
-         textList[1] = "";
-         textList[2] = "Heading: " + orientation.getYaw(AngleUnit.DEGREES);
-         textList[3] = "Pitch: " + orientation.getPitch(AngleUnit.DEGREES);
-         textList[4] = "Roll:  " + orientation.getRoll(AngleUnit.DEGREES);
+         // get list of IMUs from DeviceData list
+         for (DeviceData device : imuList)
+         {
+            YawPitchRollAngles orientation = ((IMU)device.device).getRobotYawPitchRollAngles();
+
+            // print 6 lines for each IMU
+            textList[index++] = device.name;
+            textList[index++] = "";
+            textList[index++] = "Yaw (Heading): " + df.format (orientation.getYaw(AngleUnit.DEGREES));
+            textList[index++] = "Pitch: " + df.format (orientation.getPitch(AngleUnit.DEGREES));
+            textList[index++] = "Roll:  " + df.format (orientation.getRoll(AngleUnit.DEGREES));
+            textList[index++] = "";
+         }
 
          // -100 prevents menu selection cursor
          Menu.drawMenu (textList, -100);
-         button = GamepadButtons.getButton (opMode.gamepad1);
+         button = opMode.gamepadButtons1.getButton ();
       
          switch (button)
          {
             case Dpad_Left:
+            case X:
                testDone = true;
                break;
             default:
@@ -109,97 +99,4 @@ public class ImuTest {
       }
    }
 
-   private void performDistanceTest ()
-   {
-      GamepadButtons.ButtonType button;
-      Boolean testDone = false;
-      String[] textList = new String[5];
-
-      while (!testDone && opMode.opModeIsActive())
-      {
-         textList[0] = "Acceleration";
-         textList[1] = "";
-         textList[2] = "X: " + imu.getLinearAcceleration().xAccel;
-         textList[3] = "Y: " + imu.getLinearAcceleration().yAccel;
-         textList[4] = "Z: " + imu.getLinearAcceleration().zAccel;
-
-         // -100 prevents menu selection cursor
-         Menu.drawMenu (textList, -100);
-         button = GamepadButtons.getButton (opMode.gamepad1);
-      
-         switch (button)
-         {
-            case Dpad_Left:
-               testDone = true;
-               break;
-            default:
-               break;
-         }
-         
-         opMode.sleep(200);
-      }
-   }
-   
-   private void performGravityTest ()
-   {
-      GamepadButtons.ButtonType button;
-      Boolean testDone = false;
-      String[] textList = new String[5];
-
-      while (!testDone && opMode.opModeIsActive())
-      {
-         textList[0] = "Gravity";
-         textList[1] = "";
-         textList[2] = "X: " + imu.getGravity().xAccel;
-         textList[3] = "Y: " + imu.getGravity().yAccel;
-         textList[4] = "Z: " + imu.getGravity().zAccel;
-
-         // -100 prevents menu selection cursor
-         Menu.drawMenu (textList, -100);
-         button = GamepadButtons.getButton (opMode.gamepad1);
-      
-         switch (button)
-         {
-            case Dpad_Left:
-               testDone = true;
-               break;
-            default:
-               break;
-         }
-         
-         opMode.sleep(200);
-      }
-   }
-   
-   private void performMagnetismTest ()
-   {
-      GamepadButtons.ButtonType button;
-      Boolean testDone = false;
-      String[] textList = new String[5];
-
-      while (!testDone && opMode.opModeIsActive())
-      {
-         textList[0] = "Magnetism";
-         textList[1] = "";
-         textList[2] = "X: " + imu.getMagneticFieldStrength().x * 1000000.0;
-         textList[3] = "Y: " + imu.getMagneticFieldStrength().y * 1000000.0;
-         textList[4] = "Z: " + imu.getMagneticFieldStrength().z * 1000000.0;
-
-         // -100 prevents menu selection cursor
-         Menu.drawMenu (textList, -100);
-         button = GamepadButtons.getButton (opMode.gamepad1);
-      
-         switch (button)
-         {
-            case Dpad_Left:
-               testDone = true;
-               break;
-            default:
-               break;
-         }
-         
-         opMode.sleep(200);
-      }
-   }
-   
 }

@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.hardware.HardwareDeviceManager;
@@ -16,8 +15,8 @@ public class MotorTest {
 
    String[] testList = new String[]{
       "Joystick control",
-      "Encoder test",
-      "Set parameters"
+      "Encoder wiggle test",
+      "Encoder readout"
    };
 
    String[] joystickList = new String[]{
@@ -26,12 +25,15 @@ public class MotorTest {
       "Encoder"
    };
 
-   LinearOpMode opMode = null;
+   RobotTester opMode = null;
    int selectedIndex = 0;
    int selectedMotorIndex = 0;
 
-   public void performMotorTest (LinearOpMode opMode)
+   public void performMotorTest (RobotTester opMode)
    {
+      Boolean Wiggle = true;
+      Boolean NoWiggle = false;
+
       Boolean done = false;
 
       this.opMode = opMode;
@@ -51,7 +53,10 @@ public class MotorTest {
                performJoystickTest ();
                break;
             case 1:
-               performEncoderTest ();
+               performEncoderTest (Wiggle);
+               break;
+            case 2:
+               performEncoderTest (NoWiggle);
                break;
          }
       }
@@ -76,17 +81,19 @@ public class MotorTest {
 
             while (!testDone && opMode.opModeIsActive())
             {
+               // make joystick more sensitive at lower values
                motor.setPower (Math.abs(opMode.gamepad1.right_stick_y) * opMode.gamepad1.right_stick_y);
                
                joystickList[0] = "Joystick y: " + opMode.gamepad1.right_stick_y;
                joystickList[1] = "Power: " + motor.getPower();
                joystickList[2] = "Encoder: " + motor.getCurrentPosition();
                Menu.drawMenu (joystickList, 0);
-               button = GamepadButtons.getButton (opMode.gamepad1);
+               button = opMode.gamepadButtons1.getButton ();
             
                switch (button)
                {
                   case Dpad_Left:
+                  case X:
                      testDone = true;
                      break;
                   default:
@@ -99,10 +106,12 @@ public class MotorTest {
       
    }
 
-   private void performEncoderTest ()
+   private void performEncoderTest (Boolean wiggle)
    {
       GamepadButtons.ButtonType button;
       Boolean done = false;
+      int previousEncoder = 0;
+      int currentEncoder = 0;
 
       while (!done && opMode.opModeIsActive())
       {
@@ -116,23 +125,37 @@ public class MotorTest {
          {
             Boolean testDone = false;
 
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motor.setPower(0.05);
-            opMode.sleep(50);
-            motor.setPower(0.0);
+            if (wiggle)
+            {
+               previousEncoder = motor.getCurrentPosition();
+
+               motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+               motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+               motor.setPower(0.2);
+               opMode.sleep(50);
+               motor.setPower(0.0);
+            }
 
             while (!testDone && opMode.opModeIsActive())
             {
-               joystickList[0] = "Encoder: " + motor.getCurrentPosition();
+               currentEncoder = motor.getCurrentPosition();
+               if (wiggle)
+               {
+                  joystickList[0] = "Encoder: " + previousEncoder + " -> " + currentEncoder;
+               }
+               else
+               {
+                  joystickList[0] = "Encoder: " + currentEncoder;
+               }
                joystickList[1] = "";
                joystickList[2] = "";
                Menu.drawMenu (joystickList, 0);
-               button = GamepadButtons.getButton (opMode.gamepad1);
+               button = opMode.gamepadButtons1.getButton ();
             
                switch (button)
                {
                   case Dpad_Left:
+                  case X:
                      testDone = true;
                      break;
                   default:
@@ -150,7 +173,7 @@ public class MotorTest {
       Boolean done = false;
       int localMotorIndex = selectedMotorIndex;
 
-      List<DeviceData> motorList = Config.getMotors (opMode);
+      List<DeviceData> motorList = RobotConfig.getMotors (opMode);
 
       while (!done && opMode.opModeIsActive())
       {

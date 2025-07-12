@@ -1,6 +1,14 @@
 package org.firstinspires.ftc.teamcode.robotTester;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.hardware.RobotCoreLynxModule;
+import com.qualcomm.robotcore.hardware.HardwareDevice;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.DigitalChannelImpl;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.hardware.DigitalChannelController;
 import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.Device;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -16,7 +24,39 @@ import java.util.Set;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 
-public class Config {
+public class RobotConfig {
+
+  public static List<DeviceData> getHubs (LinearOpMode opMode)
+  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<RobotCoreLynxModule> hubList;
+
+    // get list of hubs
+    hubList = opMode.hardwareMap.getAll(RobotCoreLynxModule.class);
+
+    for (RobotCoreLynxModule hub : hubList) {
+      deviceList.add(new DeviceData (opMode.hardwareMap.getNamesOf(hub).iterator().next(),
+                                     hub));
+    }
+
+    return deviceList;
+  }
+
+  public static List<DeviceData> getIMUs (LinearOpMode opMode)
+  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<IMU> imuList;
+
+    // get list of hubs
+    imuList = opMode.hardwareMap.getAll(IMU.class);
+
+    for (IMU imu : imuList) {
+      deviceList.add(new DeviceData (opMode.hardwareMap.getNamesOf(imu).iterator().next(),
+                                     imu));
+    }
+
+    return deviceList;
+  }
 
   public static List<DeviceData> getMotors (LinearOpMode opMode)
   {
@@ -224,6 +264,117 @@ public class Config {
     for (ServoController controller : controllerList) {
       deviceList.add(new DeviceData (opMode.hardwareMap.getNamesOf(controller).iterator().next(),
                                      controller));
+    }
+
+    return deviceList;
+  }
+
+  public static List<DeviceData> getTouchSensors (LinearOpMode opMode)
+  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<TouchSensor> touchSensorList;
+    List<DeviceData> controllerList;
+    int controllerIndex = 0;
+
+    controllerList = getTouchSensorControllers (opMode);
+
+    if (controllerList.size() == 0) {
+       return null;
+    }
+
+    for (DeviceData deviceData : controllerList) {
+      
+      DigitalChannelController controller = (DigitalChannelController)deviceData.device;
+      String controllerName = "";
+
+      if (controllerList.size() > 1) {
+         controllerName = deviceData.name;
+      }
+
+      // set up default sensors in case not in Configuration
+      deviceList.add(new DeviceData(controllerName + " Channel 0",
+                                    new DigitalChannelImpl(controller, 0) ));
+      deviceList.add(new DeviceData(controllerName + " Channel 1",
+                                    new DigitalChannelImpl(controller, 1) ));
+      deviceList.add(new DeviceData(controllerName + " Channel 2",
+                                    new DigitalChannelImpl(controller, 2) ));
+      deviceList.add(new DeviceData(controllerName + " Channel 3",
+                                    new DigitalChannelImpl(controller, 3) ));
+      deviceList.add(new DeviceData(controllerName + " Channel 4",
+                                    new DigitalChannelImpl(controller, 4) ));
+      deviceList.add(new DeviceData(controllerName + " Channel 5",
+                                    new DigitalChannelImpl(controller, 5) ));
+      deviceList.add(new DeviceData(controllerName + " Channel 6",
+                                    new DigitalChannelImpl(controller, 6) ));
+      deviceList.add(new DeviceData(controllerName + " Channel 7",
+                                    new DigitalChannelImpl(controller, 7) ));
+
+      // get list of sensors from the configuration
+      touchSensorList = opMode.hardwareMap.getAll(TouchSensor.class);
+
+      // if a touch sensor in the configuration matches the channel number,
+      // then append the name of the touch sensor after the channel number
+
+      for (TouchSensor touchSensor : touchSensorList) {
+      
+        // TouchSensor doesn't have a getController or getPortInfo function,
+        // so need to match via connection info.
+         
+        String touchInfo = touchSensor.getConnectionInfo ();
+
+        // TouchSensor calls it channel, but DigitalChannel calls it port.
+        // Need them to be consistent so replace channel with port
+        touchInfo = touchInfo.replace ("channel", "port");
+      
+        for (int index = 0; index < deviceList.size(); index++) {
+
+          if (touchInfo.equals (deviceList.get(index).device.getConnectionInfo ())) {
+
+            // get name from the Configuration
+            String name = opMode.hardwareMap.getNamesOf(touchSensor).iterator().next();
+
+            // append the name
+            deviceList.get(index).name = deviceList.get(index).name + " (" + name + ")";
+
+            // change the device from a digital channel to a touchSensor
+            deviceList.get(index).device = touchSensor;
+          }
+        }
+      }
+      
+      controllerIndex++;
+    }
+
+    return deviceList;
+  }
+
+  public static List<DeviceData> getTouchSensorControllers (LinearOpMode opMode)
+  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<DigitalChannelController> controllerList;
+
+    // get list of digital (touch sensor) controllers
+    controllerList = opMode.hardwareMap.getAll(DigitalChannelController.class);
+
+    for (DigitalChannelController controller : controllerList) {
+      deviceList.add(new DeviceData (opMode.hardwareMap.getNamesOf(controller).iterator().next(),
+                                     controller));
+    }
+
+    return deviceList;
+  }
+
+  public static List<DeviceData> getVoltageSensors (LinearOpMode opMode)
+  {
+    List<DeviceData> deviceList = new ArrayList<DeviceData>();
+    List<VoltageSensor> hubList;
+
+    // get list of voltage sensors in hubs
+    hubList = opMode.hardwareMap.getAll(VoltageSensor.class);
+
+    for (VoltageSensor hub : hubList) {
+      deviceList.add(new DeviceData (opMode.hardwareMap.getNamesOf(hub).iterator().next(),
+                                     hub));
     }
 
     return deviceList;
